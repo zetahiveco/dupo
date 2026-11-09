@@ -1,0 +1,11 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "mcp": {
+    "servers": {
+      "dupo": {
+        "type": "remote",
+        "url": "http://127.0.0.1:47330/mcp"
+      }
+    }
+  }
+}
