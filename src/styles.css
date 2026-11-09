@@ -97,7 +97,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: linear-gradient(160deg, #f0525d, #b91c3c);
+  background: linear-gradient(160deg, #7db8ff, #3a86ff 55%, #0a47d6);
   color: #fff;
   font-weight: 800;
   font-size: 13px;

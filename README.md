@@ -52,13 +52,13 @@ The server listens on `127.0.0.1` only, validates `Host`/`Origin` headers, and c
 ### macOS / Linux (curl)
 
 ```sh
-curl -fsSL https://dupo.vercel.app/install.sh | sh
+curl -fsSL https://getdupo.vercel.app/install.sh | sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://dupo.vercel.app/install.ps1 | iex
+irm https://getdupo.vercel.app/install.ps1 | iex
 ```
 
 ### Build from source
@@ -75,7 +75,7 @@ npm run tauri build   # produce an installable bundle
 
 ## Website
 
-Project page: [dupo.vercel.app](https://dupo.vercel.app) (source in [`website/`](./website)).
+Project page: [getdupo.vercel.app](https://getdupo.vercel.app) (source in [`website/`](./website)).
 
 ## License
 

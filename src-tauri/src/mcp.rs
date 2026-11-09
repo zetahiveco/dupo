@@ -121,7 +121,7 @@ fn tools() -> Value {
         },
         {
             "name": "read_project",
-                "description": "Read the full JSON content of a Dupo project file (.dupo). Pass the path returned by list_projects. Document pages contain shapes (text/rect/circle/path/image with x/y/width/height); video projects contain tracks (video/audio) with clips and texts.",
+            "description": "Read the full JSON content of a Dupo project file (.dupo). Pass the path returned by list_projects. Document pages contain shapes (text/rect/circle/path/image with x/y/width/height); video projects contain tracks (video/audio) with clips and texts.",
             "inputSchema": {
                 "type": "object",
                 "properties": { "path": { "type": "string", "description": "Absolute path to a .dupo file" } },
@@ -143,23 +143,100 @@ fn tools() -> Value {
             }
         },
         {
-            "name": "create_project",
-            "description": "Create a new Dupo project. Kind is documents, presentations, or videos. Width/height in pixels (e.g. 1080x1080 LinkedIn post, 1920x1080 slide, 794x1123 A4).",
+            "name": "update_page",
+            "description": "Update a single page of a Dupo document/presentation: replace its shapes array and/or background color without rewriting the whole file. Pass the full new shapes array for the page.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "name": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["documents", "presentations", "videos"] },
-                    "width": { "type": "number" },
-                    "height": { "type": "number" }
+                    "path": { "type": "string", "description": "Absolute path to a .dupo file" },
+                    "page": { "type": "number", "description": "Zero-based page index (default 0)" },
+                    "background": { "type": "string", "description": "Optional new page background hex color" },
+                    "shapes": { "type": "array", "description": "Optional full replacement shapes array for the page" }
                 },
-                "required": ["name", "kind"],
+                "required": ["path"],
                 "additionalProperties": false
             }
         },
         {
-            "name": "delete_project",
-            "description": "Delete a Dupo project file permanently.",
+            "name": "get_page_shot",
+            "description": "Render a page of a Dupo document/presentation to a PNG image and return it, so the agent can see the result. Save the project in Dupo (or write it with update_project/update_page) before calling.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "description": "Absolute path to the .dupo project" },
+                    "page": { "type": "number", "description": "Zero-based page index (default 0)" }
+                },
+                "required": ["path"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "create_document",
+            "description": "Create a new Dupo document project. Width/height in pixels (e.g. 1080x1080 LinkedIn post, 794x1123 A4, 816x1056 US Letter).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "width": { "type": "number" },
+                    "height": { "type": "number" }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "create_video",
+            "description": "Create a new Dupo video project. Width/height in pixels (default 1920x1080; use 1080x1920 for vertical).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "width": { "type": "number" },
+                    "height": { "type": "number" }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "update_document",
+            "description": "Replace the full JSON content of a Dupo document or presentation project. Read the project first, modify it, then write it back.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string" },
+                    "content": { "type": "string", "description": "The complete new JSON document" }
+                },
+                "required": ["path", "content"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "update_video",
+            "description": "Replace the full JSON content of a Dupo video project (tracks with video/audio clips, and text overlays). Read the project first, modify it, then write it back.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string" },
+                    "content": { "type": "string", "description": "The complete new JSON document" }
+                },
+                "required": ["path", "content"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "delete_document",
+            "description": "Delete a Dupo document or presentation project file permanently.",
+            "inputSchema": {
+                "type": "object",
+                "properties": { "path": { "type": "string" } },
+                "required": ["path"],
+                "additionalProperties": false
+            }
+        },
+        {
+            "name": "delete_video",
+            "description": "Delete a Dupo video project file permanently.",
             "inputSchema": {
                 "type": "object",
                 "properties": { "path": { "type": "string" } },
@@ -242,25 +319,52 @@ fn render_pages(project: &Value, media: &Path) -> Result<Vec<Vec<u8>>, String> {
                 if shape.get("hidden").and_then(|v| v.as_bool()).unwrap_or(false) {
                     continue;
                 }
-                let stype = shape.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                let stype = shape
+                    .get("kind")
+                    .or_else(|| shape.get("type"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
                 let x = shape.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0) as i64;
                 let y = shape.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0) as i64;
                 let w = shape.get("width").and_then(|v| v.as_f64()).unwrap_or(0.0) as i64;
                 let h = shape.get("height").and_then(|v| v.as_f64()).unwrap_or(0.0) as i64;
                 let fill = shape.get("fill").and_then(|v| v.as_str()).unwrap_or("#111111");
-                match stype {
-                    "rect" => canvas.fill_rect(x, y, w, h, parse_color(fill)),
+                let opacity = shape.get("opacity").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                match stype.as_str() {
+                    "rect" => canvas.fill_rect(x, y, w, h, parse_color(fill), opacity),
+                    "circle" => canvas.fill_circle(
+                        x + w / 2,
+                        y + h / 2,
+                        ((w.max(h).max(1)) as f64 / 2.0) as i64,
+                        parse_color(fill),
+                        opacity,
+                    ),
+                    "path" => {
+                        let stroke = shape.get("stroke").and_then(|v| v.as_str()).unwrap_or("#1f2430");
+                        let stroke_width = shape.get("strokeWidth").and_then(|v| v.as_f64()).unwrap_or(4.0);
+                        let sx = shape.get("scaleX").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                        let sy = shape.get("scaleY").and_then(|v| v.as_f64()).unwrap_or(1.0);
+                        if let Some(fill_color) = shape.get("fill").and_then(|v| v.as_str()) {
+                            canvas.fill_path(&path_points(shape, sx, sy), x, y, parse_color(fill_color), opacity);
+                        }
+                        canvas.stroke_path(&path_points(shape, sx, sy), x, y, stroke_width, parse_color(stroke), opacity);
+                    }
                     "image" => {
                         if let Some(src) = shape.get("src").and_then(|v| v.as_str()) {
                             match load_media(media, src) {
                                 Some(data) => canvas.draw_png(&data, x, y, w, h),
-                                None => canvas.fill_rect(x, y, w, h, [230, 230, 235]),
+                                None => canvas.fill_rect(x, y, w, h, [230, 230, 235], 1.0),
                             }
                         }
                     }
                     "text" => {
                         let text = shape.get("text").and_then(|v| v.as_str()).unwrap_or("");
-                        let size = shape.get("size").and_then(|v| v.as_f64()).unwrap_or(24.0);
+                        let size = shape
+                            .get("fontSize")
+                            .or_else(|| shape.get("size"))
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(24.0);
                         canvas.draw_text(text, x, y, w.max(40) as u32, size, parse_color(fill));
                     }
                     _ => {}
@@ -270,6 +374,28 @@ fn render_pages(project: &Value, media: &Path) -> Result<Vec<Vec<u8>>, String> {
         rendered.push(canvas.to_png());
     }
     Ok(rendered)
+}
+
+/// Parse the M/L polyline path data (page-relative points already include scale).
+fn path_points(shape: &Value, sx: f64, sy: f64) -> Vec<(i64, i64)> {
+    let data = shape.get("data").and_then(|v| v.as_str()).unwrap_or("");
+    let x = shape.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let y = shape.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let mut points = Vec::new();
+    let mut tokens = data.split_whitespace();
+    while let Some(command) = tokens.next() {
+        let (Some(px), Some(py)) = (tokens.next(), tokens.next()) else {
+            break;
+        };
+        let command = command.trim_start_matches(|c: char| !c.is_ascii_alphabetic());
+        if command != "M" && command != "L" {
+            continue;
+        }
+        let Ok(px) = px.parse::<f64>() else { continue };
+        let Ok(py) = py.parse::<f64>() else { continue };
+        points.push((x + (px * sx), y + (py * sy)));
+    }
+    points.into_iter().map(|(px, py)| (px.round() as i64, py.round() as i64)).collect()
 }
 
 /// Simple RGB raster canvas with PNG encoding.
@@ -288,15 +414,103 @@ impl Canvas {
         Canvas { width, height, pixels }
     }
 
-    pub fn fill_rect(&mut self, x: i64, y: i64, w: i64, h: i64, color: [u8; 3]) {
+    pub fn fill_rect(&mut self, x: i64, y: i64, w: i64, h: i64, color: [u8; 3], opacity: f64) {
         let x0 = x.max(0) as u32;
         let y0 = y.max(0) as u32;
         let x1 = ((x + w).max(0) as u32).min(self.width);
         let y1 = ((y + h).max(0) as u32).min(self.height);
+        let blend = |bg: u8, fg: u8| -> u8 {
+            ((fg as f64 * opacity + bg as f64 * (1.0 - opacity)).round() as u8).clamp(0, 255)
+        };
         for py in y0..y1 {
             for px in x0..x1 {
                 let idx = ((py * self.width + px) * 3) as usize;
-                self.pixels[idx..idx + 3].copy_from_slice(&color);
+                let bg = [self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2]];
+                self.pixels[idx] = blend(bg[0], color[0]);
+                self.pixels[idx + 1] = blend(bg[1], color[1]);
+                self.pixels[idx + 2] = blend(bg[2], color[2]);
+            }
+        }
+    }
+
+    pub fn fill_circle(&mut self, cx: i64, cy: i64, r: i64, color: [u8; 3], opacity: f64) {
+        if r <= 0 {
+            return;
+        }
+        for dy in -r..=r {
+            for dx in -r..=r {
+                if dx * dx + dy * dy <= r * r {
+                    self.fill_rect(cx + dx, cy + dy, 1, 1, color, opacity);
+                }
+            }
+        }
+    }
+
+    fn set_pixel(&mut self, x: i64, y: i64, color: [u8; 3], opacity: f64) {
+        if x < 0 || y < 0 || x >= self.width as i64 || y >= self.height as i64 {
+            return;
+        }
+        self.fill_rect(x, y, 1, 1, color, opacity);
+    }
+
+    fn draw_line(&mut self, x0: i64, y0: i64, x1: i64, y1: i64, thickness: f64, color: [u8; 3], opacity: f64) {
+        let dx = (x1 - x0) as f64;
+        let dy = (y1 - y0) as f64;
+        let length = (dx * dx + dy * dy).sqrt().max(1.0);
+        let steps = (length * 2.0).ceil() as i64;
+        for step in 0..=steps {
+            let t = step as f64 / steps as f64;
+            let px = x0 as f64 + dx * t;
+            let py = y0 as f64 + dy * t;
+            let half = (thickness / 2.0).max(0.5);
+            self.fill_rect(
+                (px - half).round() as i64,
+                (py - half).round() as i64,
+                (half * 2.0).round() as i64,
+                (half * 2.0).round() as i64,
+                color,
+                opacity,
+            );
+        }
+    }
+
+    pub fn stroke_path(&mut self, points: &[(i64, i64)], offset_x: i64, offset_y: i64, thickness: f64, color: [u8; 3], opacity: f64) {
+        for pair in points.windows(2) {
+            self.draw_line(
+                offset_x + pair[0].0,
+                offset_y + pair[0].1,
+                offset_x + pair[1].0,
+                offset_y + pair[1].1,
+                thickness,
+                color,
+                opacity,
+            );
+        }
+    }
+
+    pub fn fill_path(&mut self, points: &[(i64, i64)], offset_x: i64, offset_y: i64, color: [u8; 3], opacity: f64) {
+        if points.len() < 3 {
+            return;
+        }
+        let page_points: Vec<(i64, i64)> = points.iter().map(|(x, y)| (offset_x + x, offset_y + y)).collect();
+        let min_y = page_points.iter().map(|p| p.1).min().unwrap().max(0) as u32;
+        let max_y = (page_points.iter().map(|p| p.1).max().unwrap() as u32).min(self.height);
+        // Even-odd scanline fill.
+        for py in min_y..max_y {
+            let mut intersections: Vec<i64> = Vec::new();
+            let mut a = page_points[page_points.len() - 1];
+            for &b in &page_points {
+                if (b.1 <= py as i64 && a.1 > py as i64) || (a.1 <= py as i64 && b.1 > py as i64) {
+                    let t = (py as i64 - b.1) as f64 / (a.1 - b.1) as f64;
+                    intersections.push(b.0 + ((a.0 - b.0) as f64 * t).round() as i64);
+                }
+                a = b;
+            }
+            intersections.sort_unstable();
+            for pair in intersections.chunks(2) {
+                if pair.len() == 2 {
+                    self.fill_rect(pair[0], py as i64, pair[1] - pair[0], 1, color, opacity);
+                }
             }
         }
     }
@@ -343,6 +557,7 @@ impl Canvas {
                         scale as i64,
                         scale as i64,
                         color,
+                        1.0,
                     );
                 }
             }
@@ -462,6 +677,19 @@ fn glyph(ch: char) -> Option<&'static [u8; 7]> {
 }
 
 fn call_tool(deps: &Deps, name: &str, arguments: Option<&Value>) -> Value {
+    // Kind-specific tool aliases share the generic implementations.
+    let name = match name {
+        "create_document" | "create_video" => {
+            let mut args = arguments.cloned().unwrap_or(json!({}));
+            if args.get("kind").is_none() {
+                args["kind"] = json!(if name == "create_video" { "videos" } else { "documents" });
+            }
+            return call_tool(deps, "create_project", Some(&args));
+        }
+        "update_document" | "update_video" => return call_tool(deps, "update_project", arguments),
+        "delete_document" | "delete_video" => return call_tool(deps, "delete_project", arguments),
+        other => other,
+    };
     match name {
         "list_projects" => match folder(&deps.shared).map(|f| store::scan(&f)) {
             Ok(projects) => text_result(json!({ "projects": projects })),
@@ -573,6 +801,87 @@ fn call_tool(deps: &Deps, name: &str, arguments: Option<&Value>) -> Value {
                 Ok(()) => text_result(json!({ "ok": true })),
                 Err(error) => error_result(&error.to_string()),
             }
+        }
+        "update_page" => {
+            let path = match arg(arguments, "path") {
+                Ok(path) => PathBuf::from(path),
+                Err(message) => return error_result(&message),
+            };
+            let index = arguments
+                .and_then(|a| a.get("page"))
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
+            let project_raw = match fs::read_to_string(&path) {
+                Ok(raw) => raw,
+                Err(error) => return error_result(&error.to_string()),
+            };
+            let mut project: Value = match serde_json::from_str(&project_raw) {
+                Ok(value) => value,
+                Err(error) => return error_result(&format!("Could not parse the project: {error}")),
+            };
+            let pages = match project.get_mut("pages").and_then(|v| v.as_array_mut()) {
+                Some(pages) if !pages.is_empty() => pages,
+                _ => return error_result("The project has no pages to update"),
+            };
+            let index = index.round().max(0.0) as usize;
+            if index >= pages.len() {
+                return error_result(&format!("Page {index} does not exist (the project has {} pages)", pages.len()));
+            }
+            let page = &mut pages[index];
+            if let Some(background) = arguments.and_then(|a| a.get("background")).and_then(|v| v.as_str()) {
+                page["background"] = json!(background);
+            }
+            if let Some(shapes) = arguments.and_then(|a| a.get("shapes")) {
+                if !shapes.is_array() {
+                    return error_result("shapes must be an array");
+                }
+                page["shapes"] = shapes.clone();
+            }
+            match serde_json::to_string_pretty(&project) {
+                Ok(content) => match fs::write(&path, content) {
+                    Ok(()) => text_result(json!({ "ok": true, "page": index })),
+                    Err(error) => error_result(&error.to_string()),
+                },
+                Err(error) => error_result(&error.to_string()),
+            }
+        }
+        "get_page_shot" => {
+            let path = match arg(arguments, "path") {
+                Ok(path) => PathBuf::from(path),
+                Err(message) => return error_result(&message),
+            };
+            let index = arguments
+                .and_then(|a| a.get("page"))
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0)
+                .round()
+                .max(0.0) as usize;
+            let project_raw = match fs::read_to_string(&path) {
+                Ok(raw) => raw,
+                Err(error) => return error_result(&error.to_string()),
+            };
+            let project: Value = match serde_json::from_str(&project_raw) {
+                Ok(value) => value,
+                Err(error) => return error_result(&format!("Could not parse the project: {error}")),
+            };
+            let media = path
+                .parent()
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| PathBuf::from("."));
+            let rendered = match render_pages(&project, &media) {
+                Ok(pages) => pages,
+                Err(error) => return error_result(&error),
+            };
+            if index >= rendered.len() {
+                return error_result(&format!("Page {index} does not exist (the project has {} pages)", rendered.len()));
+            }
+            json!({
+                "content": [{
+                    "type": "image",
+                    "data": base64_encode(&rendered[index]),
+                    "mimeType": "image/png"
+                }]
+            })
         }
         "export_project" => {
             let path = match arg(arguments, "path") {

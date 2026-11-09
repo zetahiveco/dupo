@@ -16,8 +16,8 @@
         --border: #262b38;
         --text: #f2f4f8;
         --muted: #9aa3b5;
-        --brand: #ec4870;
-        --brand-2: #c41e4a;
+        --brand: #3a86ff;
+        --brand-2: #0a47d6;
       }
       * {
         box-sizing: border-box;
@@ -79,7 +79,7 @@
         padding: 96px 0 72px;
         text-align: center;
         background:
-          radial-gradient(600px 300px at 50% 0%, rgba(236, 72, 112, 0.18), transparent 70%);
+          radial-gradient(600px 300px at 50% 0%, rgba(58, 134, 255, 0.2), transparent 70%);
       }
       .hero h1 {
         font-size: clamp(36px, 6vw, 56px);
@@ -154,7 +154,7 @@
         cursor: pointer;
       }
       .tab[aria-selected="true"] {
-        background: rgba(236, 72, 112, 0.16);
+        background: rgba(58, 134, 255, 0.16);
         border-color: var(--brand);
         color: var(--text);
       }
@@ -257,7 +257,7 @@
         <nav class="nav-links">
           <a href="#features">Features</a>
           <a href="#mcp">MCP</a>
-          <a href="#install">Install</a>
+          <a href="#get-started">Install</a>
           <a href="https://github.com/zetahiveco/dupo">GitHub</a>
         </nav>
       </div>
@@ -274,17 +274,17 @@
           <a class="btn primary" href="#install">Get started</a>
           <a class="btn" href="https://github.com/zetahiveco/dupo">View on GitHub</a>
         </div>
-        <div class="install" aria-labelledby="install-hero">
+        <div class="install" id="get-started" aria-label="Install commands">
           <div class="tabs" role="tablist" aria-label="Install command">
             <button type="button" class="tab" role="tab" data-cmd="curl" aria-selected="true">curl (macOS / Linux)</button>
             <button type="button" class="tab" role="tab" data-cmd="powershell" aria-selected="false">PowerShell (Windows)</button>
           </div>
           <div class="cmd" data-cmd="curl" role="tabpanel" data-selected="true">
-            <pre><code>curl -fsSL https://dupo.vercel.app/install.sh | sh</code></pre>
+            <pre><code>curl -fsSL https://getdupo.vercel.app/install.sh | sh</code></pre>
             <button type="button" class="copy" data-copy>Copy</button>
           </div>
           <div class="cmd" data-cmd="powershell" role="tabpanel">
-            <pre><code>irm https://dupo.vercel.app/install.ps1 | iex</code></pre>
+            <pre><code>irm https://getdupo.vercel.app/install.ps1 | iex</code></pre>
             <button type="button" class="copy" data-copy>Copy</button>
           </div>
         </div>
@@ -357,25 +357,12 @@
     <section id="install">
       <div class="wrap">
         <h2>Install</h2>
-        <div class="install" style="max-width: none">
-          <div class="tabs" role="tablist" aria-label="Install command">
-            <button type="button" class="tab" role="tab" data-cmd="curl" aria-selected="true">curl (macOS / Linux)</button>
-            <button type="button" class="tab" role="tab" data-cmd="powershell" aria-selected="false">PowerShell (Windows)</button>
-          </div>
-          <div class="cmd" data-cmd="curl" role="tabpanel" data-selected="true">
-            <pre><code>curl -fsSL https://dupo.vercel.app/install.sh | sh</code></pre>
-            <button type="button" class="copy" data-copy>Copy</button>
-          </div>
-          <div class="cmd" data-cmd="powershell" role="tabpanel">
-            <pre><code>irm https://dupo.vercel.app/install.ps1 | iex</code></pre>
-            <button type="button" class="copy" data-copy>Copy</button>
-          </div>
-          <p style="color: var(--muted); font-size: 13px; margin: 10px 4px 0">
-            Or build from source with
-            <code>git clone https://github.com/zetahiveco/dupo</code> and
-            <code>npm run tauri build</code>.
-          </p>
-        </div>
+        <p style="color: var(--muted); max-width: 640px">
+          Use the install commands at the top of this page — curl for macOS and Linux, PowerShell
+          for Windows. Or build from source with
+          <code>git clone https://github.com/zetahiveco/dupo</code> and
+          <code>npm run tauri build</code>.
+        </p>
       </div>
     </section>
 

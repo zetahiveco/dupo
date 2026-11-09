@@ -1,6 +1,6 @@
 #!/bin/sh
 # Dupo installer for macOS and Linux.
-# Usage: curl -fsSL https://dupo.vercel.app/install.sh | sh
+# Usage: curl -fsSL https://getdupo.vercel.app/install.sh | sh
 set -eu
 
 REPO="zetahiveco/dupo"

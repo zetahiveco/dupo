@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Design studio for documents, videos, and presentations. Canva-style editor with an MCP server, in a Tauri app.",
-  "homepage": "https://dupo.vercel.app",
+  "homepage": "https://getdupo.vercel.app",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zetahiveco/dupo.git"

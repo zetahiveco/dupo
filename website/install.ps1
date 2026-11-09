@@ -1,5 +1,5 @@
 # Dupo installer for Windows.
-# Usage: irm https://dupo.vercel.app/install.ps1 | iex
+# Usage: irm https://getdupo.vercel.app/install.ps1 | iex
 $ErrorActionPreference = "Stop"
 
 $Repo = "zetahiveco/dupo"
