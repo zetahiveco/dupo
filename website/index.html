@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dupo — Canva-style design studio for your desktop</title>
+    <meta
+      name="description"
+      content="Dupo is a Canva-style editor for documents, presentations, and videos with a built-in MCP server for AI agents. Native desktop app for macOS, Windows, and Linux."
+    />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --bg: #0f1117;
+        --surface: #171a23;
+        --border: #262b38;
+        --text: #f2f4f8;
+        --muted: #9aa3b5;
+        --brand: #ec4870;
+        --brand-2: #c41e4a;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+        line-height: 1.6;
+      }
+      a {
+        color: inherit;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(15, 17, 23, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 18px;
+        text-decoration: none;
+      }
+      .brand img {
+        width: 26px;
+        height: 26px;
+      }
+      .nav-links {
+        display: flex;
+        gap: 24px;
+        font-size: 14px;
+      }
+      .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+      .hero {
+        padding: 96px 0 72px;
+        text-align: center;
+        background:
+          radial-gradient(600px 300px at 50% 0%, rgba(236, 72, 112, 0.18), transparent 70%);
+      }
+      .hero h1 {
+        font-size: clamp(36px, 6vw, 56px);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      .hero h1 span {
+        background: linear-gradient(120deg, var(--brand), var(--brand-2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero p {
+        margin: 20px auto 0;
+        max-width: 620px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+      .cta-row {
+        margin-top: 36px;
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn.primary {
+        background: linear-gradient(120deg, var(--brand), var(--brand-2));
+        border: none;
+        color: #fff;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.08);
+      }
+      .install {
+        margin-top: 40px;
+        text-align: left;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px 16px;
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .tab {
+        flex: 1;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tab[aria-selected="true"] {
+        background: rgba(236, 72, 112, 0.16);
+        border-color: var(--brand);
+        color: var(--text);
+      }
+      .cmd {
+        display: none;
+        align-items: center;
+        gap: 12px;
+      }
+      .cmd[data-selected="true"] {
+        display: flex;
+      }
+      .cmd pre {
+        flex: 1;
+        margin: 0;
+        padding: 12px 14px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13.5px;
+        color: var(--text);
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .copy {
+        flex: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .copy:hover {
+        border-color: var(--brand);
+        color: var(--brand);
+      }
+      section {
+        padding: 56px 0;
+        border-top: 1px solid var(--border);
+      }
+      h2 {
+        font-size: 28px;
+        letter-spacing: -0.01em;
+        margin-bottom: 28px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+      }
+      .card h3 {
+        font-size: 17px;
+        margin-bottom: 8px;
+      }
+      .card p {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .card .emoji {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 12px;
+      }
+      code.block {
+        display: block;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13.5px;
+        overflow-x: auto;
+        margin: 12px 0;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 0 48px;
+        color: var(--muted);
+        font-size: 14px;
+        text-align: center;
+      }
+      footer a {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <a class="brand" href="#"><img src="./icon.svg" alt="" />Dupo</a>
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#mcp">MCP</a>
+          <a href="#install">Install</a>
+          <a href="https://github.com/zetahiveco/dupo">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="hero">
+      <div class="wrap">
+        <h1>Design anything.<br /><span>Right on your desktop.</span></h1>
+        <p>
+          Dupo is a Canva-style studio for documents, presentations, and videos — with a built-in
+          MCP server so your AI agents can do the design work for you.
+        </p>
+        <div class="cta-row">
+          <a class="btn primary" href="#install">Get started</a>
+          <a class="btn" href="https://github.com/zetahiveco/dupo">View on GitHub</a>
+        </div>
+        <div class="install" aria-labelledby="install-hero">
+          <div class="tabs" role="tablist" aria-label="Install command">
+            <button type="button" class="tab" role="tab" data-cmd="curl" aria-selected="true">curl (macOS / Linux)</button>
+            <button type="button" class="tab" role="tab" data-cmd="powershell" aria-selected="false">PowerShell (Windows)</button>
+          </div>
+          <div class="cmd" data-cmd="curl" role="tabpanel" data-selected="true">
+            <pre><code>curl -fsSL https://dupo.vercel.app/install.sh | sh</code></pre>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+          <div class="cmd" data-cmd="powershell" role="tabpanel">
+            <pre><code>irm https://dupo.vercel.app/install.ps1 | iex</code></pre>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="wrap">
+        <h2>Everything you'd expect, natively</h2>
+        <div class="grid">
+          <div class="card">
+            <span class="emoji">🎨</span>
+            <h3>Canva-style editor</h3>
+            <p>Drag, resize, and rotate text, shapes, and images. Layers, undo/redo, zoom, and page backgrounds.</p>
+          </div>
+          <div class="card">
+            <span class="emoji">📄</span>
+            <h3>Page presets</h3>
+            <p>LinkedIn posts and carousels, Instagram, X, YouTube thumbnails, A4, US Letter, or custom dimensions.</p>
+          </div>
+          <div class="card">
+            <span class="emoji">🖼️</span>
+            <h3>Presentations</h3>
+            <p>Slide-based projects with a present mode. Export to PDF, PowerPoint, or PNG images.</p>
+          </div>
+          <div class="card">
+            <span class="emoji">🎬</span>
+            <h3>Video editor</h3>
+            <p>Timeline-based editing for 1080p and vertical video projects.</p>
+          </div>
+          <div class="card">
+            <span class="emoji">⚡</span>
+            <h3>Native &amp; light</h3>
+            <p>Built with Tauri 2. Small binary, fast startup, works offline. Your files never leave your machine.</p>
+          </div>
+          <div class="card">
+            <span class="emoji">📁</span>
+            <h3>Plain files</h3>
+            <p>Projects are open <code>.dupo</code> JSON files in your Documents folder. No lock-in, easy backups.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mcp">
+      <div class="wrap">
+        <h2>Your AI agent is the designer</h2>
+        <p style="color: var(--muted); max-width: 640px">
+          Dupo ships with a Model Context Protocol server. Connect Claude, Codex, OpenCode, or any
+          MCP client and let it list, read, edit, create, and export your projects.
+        </p>
+        <code class="block">claude mcp add --transport http dupo http://127.0.0.1:47330/mcp</code>
+        <div class="grid" style="margin-top: 24px">
+          <div class="card">
+            <h3>list_projects</h3>
+            <p>See every document, presentation, and video project with dimensions and paths.</p>
+          </div>
+          <div class="card">
+            <h3>read / update_project</h3>
+            <p>Agents read page JSON and write back text, shapes, and images programmatically.</p>
+          </div>
+          <div class="card">
+            <h3>export_project</h3>
+            <p>Render any project to PDF, PPTX, or PNG — straight from the agent.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <h2>Install</h2>
+        <div class="install" style="max-width: none">
+          <div class="tabs" role="tablist" aria-label="Install command">
+            <button type="button" class="tab" role="tab" data-cmd="curl" aria-selected="true">curl (macOS / Linux)</button>
+            <button type="button" class="tab" role="tab" data-cmd="powershell" aria-selected="false">PowerShell (Windows)</button>
+          </div>
+          <div class="cmd" data-cmd="curl" role="tabpanel" data-selected="true">
+            <pre><code>curl -fsSL https://dupo.vercel.app/install.sh | sh</code></pre>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+          <div class="cmd" data-cmd="powershell" role="tabpanel">
+            <pre><code>irm https://dupo.vercel.app/install.ps1 | iex</code></pre>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+          <p style="color: var(--muted); font-size: 13px; margin: 10px 4px 0">
+            Or build from source with
+            <code>git clone https://github.com/zetahiveco/dupo</code> and
+            <code>npm run tauri build</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <p><a href="https://github.com/zetahiveco/dupo">GitHub</a> · MIT License · Built with Tauri</p>
+      </div>
+    </footer>
+
+    <script>
+      var tabs = document.querySelectorAll(".tab");
+
+      function selectCmd(cmd) {
+        document.querySelectorAll(".tab").forEach(function (tab) {
+          var on = tab.dataset.cmd === cmd;
+          tab.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        document.querySelectorAll(".cmd").forEach(function (panel) {
+          panel.dataset.selected = panel.dataset.cmd === cmd ? "true" : "false";
+        });
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          selectCmd(tab.dataset.cmd);
+        });
+      });
+
+      document.querySelectorAll("[data-copy]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var panel = button.closest(".cmd");
+          var code = panel ? panel.querySelector("code") : null;
+          var text = code ? code.textContent.trim() : "";
+          function done() {
+            button.textContent = "Copied";
+            setTimeout(function () {
+              button.textContent = "Copy";
+            }, 1400);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done);
+          } else {
+            var area = document.createElement("textarea");
+            area.value = text;
+            area.style.position = "absolute";
+            area.style.left = "-9999px";
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand("copy");
+            document.body.removeChild(area);
+            done();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

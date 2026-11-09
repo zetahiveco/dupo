@@ -1,0 +1,42 @@
+{
+  "name": "dupo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Design studio for documents, videos, and presentations. Canva-style editor with an MCP server, in a Tauri app.",
+  "homepage": "https://dupo.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zetahiveco/dupo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zetahiveco/dupo/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0",
+    "@tauri-apps/plugin-fs": "^2.7.1",
+    "konva": "^10.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.7.0",
+    "react-konva": "^19.3.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "puppeteer-core": "^25.16.0",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.5"
+  }
+}
