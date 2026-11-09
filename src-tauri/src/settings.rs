@@ -19,7 +19,7 @@ impl Default for Settings {
         Settings {
             projects_folder: default_projects_folder(),
             theme: "dark".to_string(),
-            mcp_enabled: false,
+            mcp_enabled: true,
         }
     }
 }

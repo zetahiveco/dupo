@@ -962,9 +962,12 @@ fn host_allowed(headers: &[(String, String)]) -> bool {
 }
 
 fn origin_allowed(headers: &[(String, String)]) -> bool {
-    headers.iter().any(|(key, value)| {
+    // CLI MCP clients send no Origin header — only reject a *foreign* origin
+    // (browser-based CSRF), never the absence of one.
+    !headers.iter().any(|(key, value)| {
         key.eq_ignore_ascii_case("origin")
-            && (value.starts_with("http://127.0.0.1") || value.starts_with("http://localhost"))
+            && !value.starts_with("http://127.0.0.1")
+            && !value.starts_with("http://localhost")
     })
 }
 
@@ -1072,7 +1075,7 @@ fn handle_stream(deps: Deps, mut stream: TcpStream) {
         write_response(&mut stream, "200 OK", "Access-Control-Allow-Origin: *\r\n", b"{}");
         return;
     }
-    if method != "POST" || !(target == "/mcp" || target == "/mcp/") {
+    if method != "POST" || !(target == "/mcp" || target == "/mcp/" || target == "/" || target.is_empty()) {
         write_response(&mut stream, "404 Not Found", "", b"not found");
         return;
     }
@@ -1115,6 +1118,9 @@ pub fn serve(deps: Deps) -> Result<Running, String> {
             match listener.accept() {
                 Ok((stream, _addr)) => {
                     stream.set_nodelay(true).ok();
+                    // Accepted sockets inherit the listener's non-blocking mode;
+                    // large responses need blocking writes.
+                    stream.set_nonblocking(false).ok();
                     let deps = deps.clone();
                     std::thread::spawn(move || handle_stream(deps, stream));
                 }
